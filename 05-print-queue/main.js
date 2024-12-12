@@ -11,8 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const promises_1 = require("fs/promises");
 solveA(false);
-// get rules for update line
-// find starting number from update line
+solveB(false);
 function parseInput(test) {
     return __awaiter(this, void 0, void 0, function* () {
         const path = test
@@ -63,6 +62,36 @@ function solveA(test) {
                 middleValues.push(parseInt(middleValue));
             }
         }
-        console.log(middleValues.reduce((carry, val) => carry + val));
+        const result = middleValues.reduce((carry, val) => carry + val);
+        console.log('Result of part One: ' + result);
     });
+}
+function solveB(test) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { rules, updates } = yield parseInput(test);
+        const middleValues = [];
+        for (const update of updates) {
+            if (swapWrongNumbers(update, rules)) {
+                continue;
+            }
+            while (!swapWrongNumbers(update, rules)) { }
+            const middleValue = update[Math.floor(update.length / 2)];
+            middleValues.push(parseInt(middleValue));
+        }
+        const result = middleValues.reduce((carry, val) => carry + val);
+        console.log('Result of part Two: ' + result);
+    });
+}
+function swapWrongNumbers(update, rules) {
+    for (let i = 0; i < update.length; i++) {
+        for (let j = i + 1; j < update.length; j++) {
+            if (!rules.has(update[i] + '_' + update[j])) {
+                const left = update[i];
+                update[i] = update[j];
+                update[j] = left;
+                return false;
+            }
+        }
+    }
+    return true;
 }

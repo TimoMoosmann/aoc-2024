@@ -1,8 +1,7 @@
 import { readFile } from "fs/promises";
 
 solveA(false);
-// get rules for update line
-// find starting number from update line
+solveB(false);
 
 async function parseInput(test: boolean) {
     const path = test
@@ -60,5 +59,41 @@ async function solveA(test: boolean) {
         }
     }
 
-    console.log(middleValues.reduce((carry, val) => carry + val));
+    const result = middleValues.reduce((carry, val) => carry + val);
+    console.log('Result of part One: ' + result);
+}
+
+async function solveB(test: boolean) {
+    const {rules, updates} = await parseInput(test);
+
+    const middleValues: number[] = [];
+
+    for (const update of updates) {
+        if (swapWrongNumbers(update, rules)) {
+            continue
+        }
+
+        while (!swapWrongNumbers(update, rules)) {}
+        
+        const middleValue = update[Math.floor(update.length / 2)];
+        middleValues.push(parseInt(middleValue));
+    }
+
+    const result = middleValues.reduce((carry, val) => carry + val);
+    console.log('Result of part Two: ' + result);
+}
+
+function swapWrongNumbers(update: string[], rules: Set<string>) {
+    for (let i = 0; i < update.length; i++) {
+        for (let j = i + 1; j < update.length; j++) {
+            if (!rules.has(update[i] + '_' + update[j])) {
+                const left = update[i];
+                update[i] = update[j];
+                update[j] = left;
+                return false
+            }
+        }
+    }
+
+    return true;
 }
