@@ -2,3 +2,4 @@ node_modules
 input
 test_input
 inputs
+*.js
