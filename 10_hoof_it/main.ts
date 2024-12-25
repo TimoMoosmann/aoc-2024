@@ -19,6 +19,51 @@ export async function solveA(): Promise<number> {
     return solution;
 }
 
+export async function solveB(): Promise<number> {
+    const topographicMap = await parseTopographicMap();
+    let result = 0;
+
+    const trailheads = getTrailheads(topographicMap);
+
+    for (const trailhead of trailheads) {
+        result += getDistinctPaths(trailhead, topographicMap);
+    }
+
+    return result;
+}
+
+function getDistinctPaths(trailhead: Pos, topographicMap: number[][]) {
+    let distinctPaths = 0;
+
+    const currentPositions = [{
+      pos: trailhead,
+      level: 0,
+    }];
+
+    while (true) {
+        const currentPosition = currentPositions.pop();
+
+        if (currentPosition === undefined) {
+            break;
+        }
+
+        const validNeighbors = getValidNeighbors(
+            currentPosition,
+            topographicMap
+        );
+
+        for (const validNeighbor of validNeighbors) {
+            if (validNeighbor.level === 9) {
+                distinctPaths++;
+            } else {
+                currentPositions.push(validNeighbor);
+            }
+        }
+    }
+
+    return distinctPaths;
+}
+
 interface Pos {
     x: number;
     y: number;
@@ -40,6 +85,37 @@ function getPosIdentifier(pos: Pos) {
     return `${pos.x}:${pos.y}`;
 }
 
+function getValidNeighbors(trailPos: TrailPos, topographicMap: number[][]) {
+    const neighborDistances = [
+        { x: 1, y: 0 },
+        { x: 0, y: 1 },
+        { x: -1, y: 0 },
+        { x: 0, y: -1 },
+    ];
+
+    const validNeighbors: TrailPos[] = [];
+
+    for (const neighborDistance of neighborDistances) {
+        const neighborPos = addPos(trailPos.pos, neighborDistance);
+        if (
+            neighborPos.x < 0 || neighborPos.x >= topographicMap[0].length ||
+            neighborPos.y < 0 || neighborPos.y >= topographicMap.length
+        ) {
+            continue;
+        }
+
+        const neighborLevel = topographicMap[neighborPos.y][neighborPos.x];
+        if (neighborLevel === trailPos.level + 1) {
+            validNeighbors.push({
+                pos: neighborPos,
+                level: neighborLevel,
+            });
+        }
+    }
+
+    return validNeighbors;
+}
+
 function getEndpoints(trailPos: TrailPos, topogrpahicMap: number[][]) {
     const neighborDistances = [
         { x: 1, y: 0 },
@@ -58,6 +134,7 @@ function getEndpoints(trailPos: TrailPos, topogrpahicMap: number[][]) {
         const neighborPos = addPos(trailPos.pos, neighborDistance);
         if (
             neighborPos.x < 0 || neighborPos.x >= topogrpahicMap[0].length ||
+
             neighborPos.y < 0 || neighborPos.y >= topogrpahicMap.length
         ) {
             continue;
@@ -113,4 +190,8 @@ async function parseTopographicMap() {
 if (import.meta.main) {
     const partASolution = await solveA();
     console.log("Solution for part One: " + partASolution);
+
+    const partBSolution = await solveB();
+    console.log("Solution for part Two: " + partBSolution);
 }
+
