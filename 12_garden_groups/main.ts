@@ -1,55 +1,53 @@
-const inputFilePath = Deno.args[0];
-const input = await Deno.readTextFile(inputFilePath);
-const map = input.split('\n');
-map.pop();
+import { getNeighbors } from "./neighbors.ts";
+import { getPosIdentifier, isInBounds, Pos } from "./pos.ts";
 
-const mapWidth = map[0].length;
-const mapHeight = map.length;
-const coveredInputs = new Set<string>();
-let price = 0;
+solvePartOne();
 
-const neighborDistances = [
-    { x: 1, y: 0 },
-    { x: -1, y: 0 },
-    { x: 0, y: 1 },
-    { x: 0, y: -1 },
-];
+async function solvePartOne() {
+  const map = await parseMap();
+  const mapWidth = map[0].length;
+  const mapHeight = map.length;
+  const visited = new Set<string>();
+  let price = 0;
 
-for (let x = 0; x < mapWidth; x++) {
+  for (let x = 0; x < mapWidth; x++) {
     for (let y = 0; y < mapHeight; y++) {
-        if (coveredInputs.has(getPosIdentifier({x, y}))) {
-            continue;
-        }
+      if (visited.has(getPosIdentifier({ x, y }))) {
+        continue;
+      }
 
-        const [area, perimeter] = calculateFenceAreaAndPerimeter(
-            x,
-            y,
-            map[y].charAt(x),
-            map,
-            coveredInputs,
-        );
+      const [area, perimeter] = calculateFenceAreaAndPerimeter(
+        {x, y},
+        map[y].charAt(x),
+        map,
+        visited
+      );
 
-        price += area * perimeter;
+      price += area * perimeter;
     }
+  }
+
+  console.log('Solution for part One: ' + price);
 }
 
-console.log('Solution for part One: ' + price);
-
-function getPosIdentifier(pos: Pos) {
-    return `${pos.x}_${pos.y}`;
+async function parseMap() {
+  const inputFilePath = Deno.args[0];
+  const input = await Deno.readTextFile(inputFilePath);
+  const map = input.split('\n');
+  map.pop();
+  return map;
 }
 
 function calculateFenceAreaAndPerimeter(
-    x: number,
-    y: number,
-    value: string,
+    startPos: Pos,
+    plantValue: string,
     map: string[],
-    coveredInputs: Set<string>,
+    visited: Set<string>,
 ): [number, number] {
     let perimeter = 0;
     let area = 0;
 
-    const plantPositions = [{ x, y }];
+    const plantPositions = [startPos];
     while (true) {
         const plantPos = plantPositions.pop();
 
@@ -57,22 +55,14 @@ function calculateFenceAreaAndPerimeter(
             break;
         }
 
-        if (coveredInputs.has(getPosIdentifier(plantPos))) {
+        if (visited.has(getPosIdentifier(plantPos))) {
             continue;
         }
 
-        for (const neighborDist of neighborDistances) {
-            const neighbor = {
-                x: plantPos.x + neighborDist.x,
-                y: plantPos.y + neighborDist.y,
-            };
-
+        for (const neighbor of getNeighbors(plantPos)) {
             if (!isInBounds(neighbor, map)) {
                 perimeter++;
-                continue;
-            }
-
-            if (map[neighbor.y].charAt(neighbor.x) === value) {
+            } else if (map[neighbor.y].charAt(neighbor.x) === plantValue) {
                 plantPositions.push(neighbor);
             } else {
                 perimeter++;
@@ -80,19 +70,9 @@ function calculateFenceAreaAndPerimeter(
         }
 
         area++;
-        coveredInputs.add(getPosIdentifier(plantPos))
+        visited.add(getPosIdentifier(plantPos))
     }
 
     return [area, perimeter];
 }
-
-function isInBounds(pos: Pos, map: string[]) {
-    return pos.x >= 0 && pos.y >= 0
-        && pos.x < map[0].length && pos.y < map.length;
-}
-
-interface Pos {
-    x: number,
-    y: number
-};
 
